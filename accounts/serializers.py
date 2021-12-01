@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from accounts.models import NewUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils.translation import ugettext_lazy as _
+
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -40,3 +43,20 @@ class CustomUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    default_error_messages = {
+        'no_active_account': _('Incorrect password')
+        }
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if NewUser.objects.filter(email=email).exists():
+            data = super().validate(attrs)
+            return data
+        raise serializers.ValidationError({'email': 'Account does not exist'})
+        
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['user'] = user.user_name
+        return token
