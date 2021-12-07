@@ -11,10 +11,6 @@ from accounts.models import NewUser
 from rest_framework import serializers
 
 
-
-
-
-
 class CustomUserCreate(APIView):
     permission_classes = [AllowAny]
     

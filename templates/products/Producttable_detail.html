@@ -1,0 +1,10 @@
+<h1>{{ object.product_name }}</h1>
+<p>{{ object.category }}</p>
+
+{% for sizes in book_list %} 
+    <li>{{sizes}}</li>
+{% endfor %} 
+{% for image in object.images.all %} 
+    <img src="{{image.image.url}}" />
+    
+{% endfor %} 
