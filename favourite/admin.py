@@ -6,6 +6,6 @@ from .models import Favourite
 
 
 class FavouriteAdmin(admin.ModelAdmin):
-    list_display = ['user','product']
+    list_display = ['id','user','product']
 
 admin.site.register(Favourite,FavouriteAdmin)

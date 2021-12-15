@@ -20,18 +20,3 @@ class ProductView(viewsets.ModelViewSet):
     def get_object(self, queryset=None, **kwargs):
         item = self.kwargs.get('pk')
         return get_object_or_404(ProductTable, slug=item)
-
-
-
-
-class ProductDetailView(DetailView):
-    model = ProductTable
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        print(context['producttable'].size_type)
-        size_type = context['producttable'].size_type
-        a = SizeType.objects.get(size_types=size_type)
-        a.size_set.all()
-        print(a.size_set.all())
-        context['book_list'] = a.size_set.all()
-        return context

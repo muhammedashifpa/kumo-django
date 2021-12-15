@@ -11,4 +11,4 @@ class Favourite(models.Model):
     class Meta:
         unique_together = [("user", "product")]
     def __str__(self):
-        return str(self.product)
+        return str(self.product)+", User : "+str(self.user)
