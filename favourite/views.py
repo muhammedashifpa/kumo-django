@@ -14,9 +14,6 @@ class FavouriteView(viewsets.ViewSet):
     def list(self, request):
         queryset_one = Favourite.objects.filter(user=request.user.id)
         serializer = FavouriteSerializer(queryset_one, many=True, context={'request': request})
-        # queryset_one = Favourite.objects.filter(user=request.user.id).values_list('product', flat=True)
-        # queryset = ProductTable.objects.filter(id__in=queryset_one)
-        # serializer = ProductTableSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
     def create(self, request):
@@ -24,7 +21,6 @@ class FavouriteView(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response({'message':'success','data':serializer.data})
-        print(serializer.errors)
         return Response({'message':'error','data':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, pk=None):

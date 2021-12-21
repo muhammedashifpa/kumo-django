@@ -1,12 +1,6 @@
-from django.shortcuts import render
-from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
-from .models import ProductTable,SizeType
-from rest_framework import generics
+from .models import ProductTable
 from .serializers import ProductTableSerializer
-from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 # Create your views here.

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'products',
     'django_truncate',
     'favourite',
+    'cart',
 ]
 
 MIDDLEWARE = [

@@ -24,6 +24,7 @@ urlpatterns = [
     path('product/',include('products.urls', namespace='products')),
     path('favourite/',include('favourite.urls', namespace='favourite')),
     path('api-auth/',include('rest_framework.urls', namespace='rest_frameworks')),
+    path('cart/',include('cart.urls', namespace='cart')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
