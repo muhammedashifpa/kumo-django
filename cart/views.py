@@ -2,13 +2,16 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from products.models import ProductTable
 from .serializers import CartSerializer, CartSerializerForCreate
 from .models import Cart
+from django.db.models import Sum
 
 class CartView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     def list(self, request):
         queryset = Cart.objects.filter(user=request.user)
+        print(ProductTable.objects.filter(product__in=queryset).aggregate(Sum('price')))
         serializer = CartSerializer(queryset,many=True , context={'request': request})
         return Response(serializer.data)
 
@@ -16,7 +19,6 @@ class CartView(viewsets.ViewSet):
     def create(self, request):
         if int(request.data['user']) != request.user.id:
             return Response({'message':'UnAuthenticated'})
-        print(request.data)
         serializer = CartSerializerForCreate(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -31,9 +33,9 @@ class CartView(viewsets.ViewSet):
 
     def partial_update(self, request, pk=None):
         instance = get_object_or_404(Cart,pk=pk)
-        # print(request.user.user_name)
-        if instance.user != request.user.user_name:
-            return Response({'message':'UnAuthenticated'})
+        # print(request.user.user_name,instance.user.user_name)
+        if instance.user.user_name != request.user.user_name:
+            return Response({'message':'UnAuthenticated'}, status=status.HTTP_400_BAD_REQUEST)
         serialized = CartSerializerForCreate(instance, data=request.data, partial=True)
         if serialized.is_valid():
             serialized.save()

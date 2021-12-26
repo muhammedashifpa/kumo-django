@@ -8,6 +8,7 @@ class ProductImagesInline(admin.StackedInline):
 @admin.register(ProductTable)
 class ProductTableAdmin(admin.ModelAdmin):
     inlines = [ProductImagesInline]
+    list_display = ['id','product_name']
     prepopulated_fields = {'slug': ('gender','category','brand','product_name'), }
 
 

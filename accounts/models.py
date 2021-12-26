@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 
@@ -47,11 +48,24 @@ class NewUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     news_letter = models.BooleanField(default=False)
-
     objects = CustomAccountManager()
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['user_name', 'first_name']
 
     def __str__(self):
         return self.user_name
+
+class Address(models.Model):
+    user = models.ForeignKey(NewUser,default=None,on_delete=models.CASCADE,related_name='address_user')
+    first_name = models.CharField(max_length=150, blank=False)
+    last_name = models.CharField(max_length=150, blank=False)
+    email = models.EmailField(_('email address'))
+    company = models.CharField(max_length=150, blank=True)
+    Address_1 = models.CharField(max_length=150, blank=False)
+    Address_2 = models.CharField(max_length=150, blank=True)
+    country = models.CharField(max_length=150, blank=False)
+    city = models.CharField(max_length=150,blank=False)
+    postal_code = models.CharField(max_length=150, blank=False)
+    mobile = PhoneNumberField(null=False)
+    def __str__(self):
+        return self.user

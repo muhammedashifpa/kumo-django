@@ -1,15 +1,13 @@
+from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from .serializers import CustomUserSerializer, MyTokenObtainPairSerializer
+from rest_framework.permissions import AllowAny,BasePermission
+from .serializers import CustomUserSerializer, MyTokenObtainPairSerializer,UserProfileSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import exceptions
 from rest_framework_simplejwt.views import TokenObtainPairView
 from accounts.models import NewUser
-from rest_framework import serializers
-
 
 class CustomUserCreate(APIView):
     permission_classes = [AllowAny]
@@ -25,13 +23,6 @@ class CustomUserCreate(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class HelloView(APIView):
-    permission_classes = [IsAuthenticated]
-  
-    def get(self, request):
-        content = {'message': 'Hello, GeeksforGeeks'}
-        return Response(content)
-
 class BlacklistTokenUpdateView(APIView):
     permission_classes = [AllowAny]
 
@@ -44,13 +35,34 @@ class BlacklistTokenUpdateView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
-class ProfileDetailView(APIView):
-    permission_classes = [IsAuthenticated]
 
+
+
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
-        user_name = request.user.user_id
-        print(user_name)
+        user_name = request.user.user_name
+        # print(user_name)
+        data = get_object_or_404(NewUser,user_name=user_name)
+        serialized = UserProfileSerializer(data)
+        return Response(serialized.data,status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
         pass
+
+    def delete(self, request):
+        pass
+    
+    def patch(self, request):
+        user_name = request.user.user_name
+        user = get_object_or_404(NewUser,user_name=user_name)
+        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'success'},status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
