@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from phonenumber_field.modelfields import PhoneNumberField
+from django.core.validators import RegexValidator
 
 
 
@@ -61,11 +62,12 @@ class Address(models.Model):
     last_name = models.CharField(max_length=150, blank=False)
     email = models.EmailField(_('email address'))
     company = models.CharField(max_length=150, blank=True)
-    Address_1 = models.CharField(max_length=150, blank=False)
-    Address_2 = models.CharField(max_length=150, blank=True)
+    address_1 = models.CharField(max_length=150, blank=False)
+    address_2 = models.CharField(max_length=150, blank=True)
     country = models.CharField(max_length=150, blank=False)
     city = models.CharField(max_length=150,blank=False)
     postal_code = models.CharField(max_length=150, blank=False)
-    mobile = PhoneNumberField(null=False)
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    mobile = PhoneNumberField(validators=[phone_regex], max_length=17,null=False)
     def __str__(self):
-        return self.user
+        return self.address_1

@@ -1,13 +1,13 @@
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny,BasePermission
-from .serializers import CustomUserSerializer, MyTokenObtainPairSerializer,UserProfileSerializer
+from .serializers import AddressSerializer, CustomUserSerializer, MyTokenObtainPairSerializer,UserProfileSerializer
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from accounts.models import NewUser
+from accounts.models import Address, NewUser
 
 class CustomUserCreate(APIView):
     permission_classes = [AllowAny]
@@ -66,3 +66,49 @@ class ProfileView(APIView):
             return Response({'message':'success'},status=status.HTTP_200_OK)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class PostUserWritePermission(BasePermission):
+    message = 'Following data is only for owners.'
+
+    def has_object_permission(self, request, view, obj):
+        print(request.user.id,obj.user.id)
+        return obj.user.id == request.user.id
+
+
+
+class AddressView(viewsets.ModelViewSet):
+    serializer_class = AddressSerializer
+    permission_classes =[IsAuthenticated,PostUserWritePermission]
+    def get_object(self, queryset=None, **kwargs):
+        item = self.kwargs.get('pk')
+        self.check_object_permissions(self.request, get_object_or_404(Address, id=item))
+        return get_object_or_404(Address, id=item)
+
+    def get_queryset(self):
+        print(Address.objects.filter(user=self.request.user))
+        return Address.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # def post(self, request,pk=None):
+    #     print('post')
+    #     return self.create(self, request)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
