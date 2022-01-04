@@ -1,17 +1,19 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
-from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from products.models import ProductTable
-from .serializers import CartSerializer, CartSerializerForCreate
+from .serializers import CartSerializer, CartSerializerForCreate, CheckoutCartSerializer
 from .models import Cart
-from django.db.models import Sum
+from django.db.models import Sum,F
+from rest_framework.renderers import JSONRenderer
+from products.models import Coupon
 
 class CartView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     def list(self, request):
         queryset = Cart.objects.filter(user=request.user)
-        print(ProductTable.objects.filter(product__in=queryset).aggregate(Sum('price')))
         serializer = CartSerializer(queryset,many=True , context={'request': request})
         return Response(serializer.data)
 
@@ -42,8 +44,48 @@ class CartView(viewsets.ViewSet):
             return Response({'message':'success','data':serialized.data})
         return Response({'message':'error','data':serialized.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        
 
+
+
+
+class CheckoutCart(APIView):
+    permission_classes = [IsAuthenticated]
+    def get_data(self, request,**kwargs):
+        coupon = kwargs.pop('coupon',None)
+        queryset= Cart.objects.filter(user=request.user)
+        serializer = CartSerializer(queryset,many=True , context={'request': request})
+        sub_total = sum(i.get_total for i in queryset)
+        tax = (sub_total/100)*8
+        coupon_discount = 0
+        if coupon is not None and sub_total + tax>=3000:
+            coupon_obj = get_object_or_404(Coupon,coupon_code=coupon)
+            if coupon_obj.is_valid:
+                coupon_discount = 0-(sub_total/100)*coupon_obj.coupon_offer
+
+
+        shipping_charge = 0 if sub_total + tax+coupon_discount >=7000 else 250
+
+        total = sub_total+tax+shipping_charge+coupon_discount
+        data = {'sub_total':sub_total,
+                'tax':tax,
+                'shipping_charge':shipping_charge,
+                'coupon_discount':coupon_discount,
+                'total':total,
+                'items':serializer.data
+                }
+        return data
+    
+    def get(self,request,format=None,**kwargs):
+        data = self.get_data(request,**kwargs)
+        return Response(data)
+
+    def post(self,request,format=None,**kwargs):
+        print(request.data)
+        kwargs['coupon']= request.data.get('coupon')
+        data = self.get_data(request,**kwargs)
+        return Response(data)
+        
+        
 
 
 

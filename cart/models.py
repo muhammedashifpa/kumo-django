@@ -14,3 +14,8 @@ class Cart(models.Model):
         unique_together = [("user", "product","size")]
     def __str__(self):
         return str(self.product)+", User : "+str(self.user)
+
+    @property
+    def get_total(self):
+        return self.product.price*self.count
+        

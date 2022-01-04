@@ -59,3 +59,11 @@ class Images(models.Model):
     image = models.ImageField(upload_to='prd_img', null=True, blank=True)
     def __str__(self):
         return str(self.product)
+
+class Coupon(models.Model):
+    coupon_title=models.CharField(max_length=30)  
+    coupon_offer=models.FloatField()
+    coupon_code=models.CharField(max_length=30)
+    is_valid=models.BooleanField(default=True)
+    def __str__(self):
+        return self.coupen_title

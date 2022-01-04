@@ -26,7 +26,11 @@ class UserAdminConfig(UserAdmin):
             'fields': ('email', 'user_name', 'first_name','last_name', 'password1', 'password2', 'is_active', 'is_staff','news_letter')}
          ),
     )
+class AddressAdmin(admin.ModelAdmin):
+    model = Address
+    list_display = ('id','email', 'first_name','address_1')
+
 
 
 admin.site.register(NewUser, UserAdminConfig)
-admin.site.register(Address)
+admin.site.register(Address,AddressAdmin)
