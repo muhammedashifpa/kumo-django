@@ -1,64 +1,118 @@
-from rest_framework.permissions import AllowAny
-import stripe
-from rest_framework.views import APIView
+import json
+
+import environ
+import razorpay
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+
+from cart.models import Cart
+
+from order.models import Order, OrderItem
+from order.serializers import OrderSerializer, OrderItemsSerializer
+
+env = environ.Env()
+environ.Env.read_env()
+
+@api_view(['POST'])
+def start_payment(request):
+    amount = request.data['amount']
+    items = request.data['items']
+    # setup razorpay client
+    client = razorpay.Client(auth=(env('PUBLIC_KEY'), env('SECRET_KEY')))
+
+    # create razorpay order
+    payment = client.order.create({"amount": int(amount) * 100, 
+                                   "currency": "INR", 
+                                   "payment_capture": "1"})
+
+    # we are saving an order with isPaid=False
+    order = Order.objects.create(user = request.user,
+                                 order_amount=amount, 
+                                 order_payment_id=payment['id'])
+    for item in items:
+        data = {
+        "order":order.id,
+        "product" : item['product']['id'],
+        'size' : item['size'],
+        "count" : item['count'],
+                }
+        serializer = OrderItemsSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+
+    Cart.objects.filter(user=request.user).delete()
+    serializer = OrderSerializer(order)
+    # print(serializer)
+
+    """order response will be 
+    {'id': 17, 
+    'order_date': '20 November 2020 03:28 PM', 
+    'order_product': '**product name from frontend**', 
+    'order_amount': '**product amount from frontend**', 
+    'order_payment_id': 'order_G3NhfSWWh5UfjQ', # it will be unique everytime
+    'isPaid': False}"""
+
+    data = {
+        "payment": payment,
+        "order": serializer.data
+    }
+    return Response(data)
 
 
-stripe.api_key ='sk_test_51KDMRRSJ2WdoqlsxXqYNq4lB91mtGOGG4nLna4rzsGFHx2nhPxJIK9ChPX2Z5O6yNIP5aVSbUOFoQY7PaqMUndmz00OtzhrOJD'
+@api_view(['POST'])
+def handle_payment_success(request):
+    # request.data is coming from frontend
+    res = json.loads(request.data["response"])
+
+    """res will be:
+    {'razorpay_payment_id': 'pay_G3NivgSZLx7I9e', 
+    'razorpay_order_id': 'order_G3NhfSWWh5UfjQ', 
+    'razorpay_signature': '76b2accbefde6cd2392b5fbf098ebcbd4cb4ef8b78d62aa5cce553b2014993c0'}
+    """
+
+    ord_id = ""
+    raz_pay_id = ""
+    raz_signature = ""
+
+    # res.keys() will give us list of keys in res
+    for key in res.keys():
+        if key == 'razorpay_order_id':
+            ord_id = res[key]
+        elif key == 'razorpay_payment_id':
+            raz_pay_id = res[key]
+        elif key == 'razorpay_signature':
+            raz_signature = res[key]
+
+    # get order by payment_id which we've created earlier with isPaid=False
+    order = Order.objects.get(order_payment_id=ord_id)
+    # items = order.order_items.all()
+    # for i in items:
+    #     # Cart.objects.get(i.id).delete()
+    #     print(Cart.objects.get(id=i.id))
 
 
-class OrderPlace(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request, format='json'):
-        payment_intent = request.data['payment_intent']
-        payment_status = stripe.PaymentIntent.retrieve(payment_intent)
-        print(payment_status)
-        if(payment_status.status == 'succeeded'):
-            return Response(status=status.HTTP_200_OK, data={'order':'success'})
-        return Response(status=status.HTTP_400_OK, data={'order':'fail'})
 
+    data = {
+        'razorpay_order_id': ord_id,
+        'razorpay_payment_id': raz_pay_id,
+        'razorpay_signature': raz_signature
+    }
 
-class MakePayment(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request, format='json'):
-        data = request.data
-        # print(data)
-        intent = stripe.PaymentIntent.create(
-            amount=100000,
-            currency='inr',
-            automatic_payment_methods={
-                'enabled': True,
-            },
-        )
-        return Response(status=status.HTTP_200_OK, data={'clientSecret': intent['client_secret']})
+    client = razorpay.Client(auth=(env('PUBLIC_KEY'), env('SECRET_KEY')))
 
-class saveStripeInfo(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request, format='json'):
-        data = request.data
-        email = data['email']
-        payment_method_id = data['payment_method_id']
-        amount = data['amount']
-        extra_msg = '' # add new variable to response message
-        # checking if customer with provided email already exists
-        customer_data = stripe.Customer.list(email=email).data   
-        
-        # if the array is empty it means the email has not been used yet  
-        if len(customer_data) == 0:
-            # creating customer
-            customer = stripe.Customer.create(
-            email=email, payment_method=payment_method_id)
-        else:
-            customer = customer_data[0]
-            extra_msg = "Customer already existed."
-        stripe_res = stripe.PaymentIntent.create(
-            customer=customer, 
-            payment_method=payment_method_id,  
-            currency='inr',
-            amount=amount)
-        confirm = stripe.PaymentIntent.confirm(stripe_res)
-        return Response(status=status.HTTP_200_OK, 
-            data={'message': 'success', 'data': {
-            'customer_id': customer.id, 'extra_msg': extra_msg ,'confirm_url': confirm.next_action.use_stripe_sdk.stripe_js}
-            })
+    # checking if the transaction is valid or not if it is "valid" then check will return None
+    check = client.utility.verify_payment_signature(data)
+
+    if check is not None:
+        print("Redirect to error url or error page")
+        return Response({'error': 'Something went wrong'})
+
+    # if payment is successful that means check is None then we will turn isPaid=True
+    order.isPaid = True
+    order.save()
+
+    res_data = {
+        'message': 'payment successfully received!'
+    }
+
+    return Response(res_data)

@@ -1,13 +1,8 @@
 from django.urls import path
-from .views import MakePayment, saveStripeInfo, OrderPlace
-from rest_framework.routers import DefaultRouter
 
+from .views import *
 app_name = 'payments'
-
 urlpatterns = [
-    path('', MakePayment.as_view(), name ='make-payment'),
-    path('place-order', OrderPlace.as_view(), name ='place-order'),
-    path(r'save-stripe-info/', saveStripeInfo.as_view(), name ='save-stripe-info'),
-
-
+    path('pay/', start_payment, name="payment"),
+    path('success/', handle_payment_success, name="payment_success")
 ]
