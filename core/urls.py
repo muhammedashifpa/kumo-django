@@ -10,7 +10,8 @@ urlpatterns = [
     path('favourite/',include('favourite.urls', namespace='favourite')),
     path('api-auth/',include('rest_framework.urls', namespace='rest_frameworks')),
     path('cart/',include('cart.urls', namespace='cart')),
-    path('payment/',include('payments.urls', namespace='payments'))
+    path('payment/',include('payments.urls', namespace='payments')),
+    path('order/',include('order.urls', namespace='order')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

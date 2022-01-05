@@ -29,6 +29,7 @@ def start_payment(request):
     order = Order.objects.create(user = request.user,
                                  order_amount=amount, 
                                  order_payment_id=payment['id'])
+    print(items)
     for item in items:
         data = {
         "order":order.id,
@@ -36,9 +37,11 @@ def start_payment(request):
         'size' : item['size'],
         "count" : item['count'],
                 }
+        print('helloo************')
         serializer = OrderItemsSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
+
 
     Cart.objects.filter(user=request.user).delete()
     serializer = OrderSerializer(order)
