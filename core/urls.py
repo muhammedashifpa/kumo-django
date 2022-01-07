@@ -12,6 +12,7 @@ urlpatterns = [
     path('cart/',include('cart.urls', namespace='cart')),
     path('payment/',include('payments.urls', namespace='payments')),
     path('order/',include('order.urls', namespace='order')),
+    # path('search/',include('search.urls', namespace='search')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

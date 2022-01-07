@@ -1,15 +1,10 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
-from .views import ProductView, CategoryView
+from .views import  ProductView, ProductDetailView
 
 app_name = 'products'
-router = DefaultRouter()
-# router.register('category', CategoryView, basename='category')
-router.register('', ProductView, basename='products')
 urlpatterns = [
-    # path('category', CategoryView.as_view(), name='category'),
-    path('category/<str:gender>/', CategoryView.as_view(), name='category'),
-    path('',include(router.urls))
+    path('', ProductView.as_view(), name='product-list'),
+    path('<str:slug>', ProductDetailView.as_view(), name='product-detail'),
 ]
-# urlpatterns = router.urls
 
