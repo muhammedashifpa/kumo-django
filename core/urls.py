@@ -5,6 +5,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('admin-api/',include('admin_api.urls', namespace='admin_api')),
     path('accounts/',include('accounts.urls', namespace='accounts')),
     path('product/',include('products.urls', namespace='products')),
     path('favourite/',include('favourite.urls', namespace='favourite')),

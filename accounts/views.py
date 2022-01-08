@@ -87,7 +87,6 @@ class AddressView(viewsets.ModelViewSet):
         return get_object_or_404(Address, id=item)
 
     def get_queryset(self):
-        print(Address.objects.filter(user=self.request.user))
         return Address.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -95,11 +94,7 @@ class AddressView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    # def post(self, request,pk=None):
-    #     print('post')
-    #     return self.create(self, request)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)

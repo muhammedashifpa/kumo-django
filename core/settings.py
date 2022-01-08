@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'order',
     'search',
     'django_filters',
+    'admin_api',
 ]
 
 MIDDLEWARE = [

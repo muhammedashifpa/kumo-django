@@ -9,6 +9,8 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAdminUser
 from rest_framework import status
 from rest_framework import filters
 from django.db import connection
+from django.db.models import Q
+
 
 # Create your views here.
 class ReadOnly(BasePermission):
@@ -24,16 +26,41 @@ class ProductDetailView(generics.RetrieveAPIView):
     lookup_field = 'slug'
     queryset = ProductTable.objects.all()
 
-
-
-
-
 class ProductView(generics.ListAPIView):
     queryset = ProductTable.objects.all()
     serializer_class = ProductTableSerializer
     filter_backends = [filters.SearchFilter,DjangoFilterBackend]
     filterset_fields = ['gender', 'product_name','brand']
     search_fields = ['=gender' ,'$category','product_name','brand__brand']
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

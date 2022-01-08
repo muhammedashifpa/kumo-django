@@ -59,6 +59,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['user'] = user.user_name
+        token['is_admin'] = user.is_superuser
         return token
 
 class UserProfileSerializer(serializers.ModelSerializer):

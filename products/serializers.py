@@ -13,4 +13,3 @@ class ProductTableSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductTable
         fields = '__all__'
-
