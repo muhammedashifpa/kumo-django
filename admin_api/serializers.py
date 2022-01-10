@@ -8,7 +8,7 @@ class AccountsSerializer(serializers.ModelSerializer):
     last_login = serializers.DateTimeField(format="%d %b %H:%M")
     class Meta:
         model = NewUser
-        fields = ('id','email','user_name', 'first_name','is_active','last_login')
+        fields = ('id','email','user_name', 'first_name','last_name','is_active','last_login')
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,3 +32,4 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_products(self,obj):
         request = self.context.get('request')
         return OrderItemsSerializerForOrderList(OrderItem.objects.filter(order=obj.id),many=True, context={'request': request}).data
+

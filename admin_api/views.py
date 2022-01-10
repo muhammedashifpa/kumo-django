@@ -1,13 +1,13 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from products.models import ProductTable
 from products.serializers import ProductTableSerializer
 from rest_framework.permissions import IsAdminUser
 from accounts.models import NewUser
-from accounts.serializers import UserProfileSerializer
 from order.models import Order
-from order.serializers import OrderSerializerForGet
 from .serializers import OrderSerializer,AccountsSerializer
-import time
+from rest_framework.response import Response
+from datetime import datetime, timedelta
 
 
 
@@ -15,6 +15,10 @@ class AccountView(viewsets.ModelViewSet):
     queryset = NewUser.objects.all()
     serializer_class = AccountsSerializer
     permission_classes = [IsAdminUser]
+
+    # def partial_update(self, request, *args, **kwargs):
+    #     print(request.data)
+    #     return super().partial_update(self,request,*args, **kwargs)
 
 
 class ProductsView(viewsets.ModelViewSet):
@@ -26,3 +30,41 @@ class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAdminUser]
+
+
+def get_date_of_order():
+    today = datetime.now().date()
+    dates = [today-timedelta(i) for i in range(7)]
+    data = []
+    for date in dates:
+        data.insert(len(data),{
+            'name': str(date.strftime('%b %d')),
+            'count':  Order.objects.filter(order_date__range=[date-timedelta(1),date]).count()
+            })
+    return data
+
+
+class OrderDetails(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self,request):
+        data = get_date_of_order()
+        return Response(data)
+
+def get_date_of_user():
+    today = datetime.now().date()
+    dates = [today-timedelta(i) for i in range(7)]
+    data = []
+    for date in dates:
+        data.insert(len(data),{
+            'name': str(date.strftime('%b %d')),
+            'count':  NewUser.objects.filter(start_date__range=[date-timedelta(1),date]).count()
+            })
+    return data
+
+import time
+class UserDetails(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self,request):
+        data = get_date_of_user()
+        print(data)
+        return Response(data)
