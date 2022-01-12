@@ -9,7 +9,7 @@ class FullTable(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProductTableSerializer(serializers.ModelSerializer):
-    images = FullTable(many=True, read_only=True)
+    images = FullTable(many=True,read_only=True)
     class Meta:
         model = ProductTable
         fields = '__all__'

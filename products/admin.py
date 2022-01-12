@@ -22,5 +22,6 @@ class CouponAdmin(admin.ModelAdmin):
 admin.site.register(Brand)
 admin.site.register(Size,SizeAdmin)
 admin.site.register(SizeType)
+admin.site.register(Images)
 admin.site.register(Coupon,CouponAdmin)
 
